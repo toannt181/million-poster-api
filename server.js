@@ -3,7 +3,7 @@
 var Hapi = require('hapi');
 
 var path = require('path');
-var settings = require('config');
+var settings = require('./config/config.json');
 
 var routes = require('./routes');
 var plugins = require('./plugins');
@@ -14,8 +14,8 @@ const internals = {
 };
 
 const server = new Hapi.Server({
-  host: settings.host,
-  port: settings.port
+  host: settings.host || '0.0.0.0',
+  port: settings.port || '4201'
 });
 
 // server.connection({port:settings.port, host:settings.host});
@@ -24,16 +24,8 @@ const server = new Hapi.Server({
 
 var initDb = function (cb) {
   var sequelize = models.sequelize;
-
-  //Test if we're in a sqlite memory database. we may need to run migrations.
-  if (sequelize.getDialect() === 'sqlite' &&
-    (!sequelize.options.storage || sequelize.options.storage === ':memory:')) {
-    sequelize.getMigrator({
-      path: process.cwd() + '/migrations',
-    }).migrate().success(function () {
-      // The migrations have been executed!
-      cb();
-    });
+  if (sequelize.getDialect() === 'sqlite') {
+    cb();
   } else {
     cb();
   }
